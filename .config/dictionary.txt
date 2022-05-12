@@ -30,4 +30,5 @@ testpaths
 tryfirst
 virl
 virsh
+xdist
 xmltodict

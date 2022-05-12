@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import sys
 import time
 
 from pathlib import Path
@@ -87,6 +88,16 @@ def pytest_configure(config: pytest.Config) -> None:
     """
     global OPTIONS  # pylint: disable=global-statement
     OPTIONS = config.option
+    log_map = {
+        0: logging.CRITICAL,
+        1: logging.ERROR,
+        2: logging.WARNING,
+        3: logging.INFO,
+        4: logging.DEBUG,
+    }
+    level = log_map.get(config.option.verbose)
+    logging.basicConfig(level=level)
+    logger.debug("Logging initialized")
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
@@ -258,7 +269,7 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
         except Exception as exc:
             virsh.close()
             cml.remove()
-            raise Exception("Failed to get DHCP lease for the appliance") from exc
+            raise Exception(f"Failed to get DHCP lease for the appliance: {str(exc)}") from exc
 
         end = time.time()
         _print(f"Elapsed time to provision {end - start} seconds")
@@ -266,7 +277,7 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
     except Exception as exc:
         logger.error("Failed to provision lab")
         _github_action_log("::endgroup::")
-        raise Exception("Failed to provision lab") from exc
+        raise Exception(f"Failed to provision lab: {str(exc)}") from exc
 
     virsh.close()
     _github_action_log("::endgroup::")
@@ -383,5 +394,5 @@ def github_log(request: pytest.FixtureRequest) -> Generator[None, None, None]:
                 _github_action_log("::endgroup::")
                 msg = f"Integration test failure: '{name}'"
                 _github_action_log(f"::error title={msg}::{msg}")
-
+                return
         _github_action_log("::endgroup::")

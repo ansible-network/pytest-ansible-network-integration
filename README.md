@@ -60,7 +60,8 @@ $ export $(cat .env | xargs)
 addopts = "-s -vvv --integration-tests-path=tests/integration/targets --cml-lab=./tests/integration/labs/single.yaml"
 testpaths = ["tests"]
 filterwarnings = [
-    'ignore:AnsibleCollectionFinder has already been configured',
-    'ignore:_AnsibleCollectionFinder.find_spec().*',
+  'ignore:AnsibleCollectionFinder has already been configured',
+  'ignore:_AnsibleCollectionFinder.find_spec().*',
 ]
+
 ```

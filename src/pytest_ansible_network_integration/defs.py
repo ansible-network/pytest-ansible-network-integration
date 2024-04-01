@@ -1,4 +1,5 @@
 """Common objects."""
+
 import logging
 import os
 import re

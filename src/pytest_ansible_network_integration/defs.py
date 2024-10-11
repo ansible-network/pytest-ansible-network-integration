@@ -141,9 +141,9 @@ class CmlWrapper:
         logger.info("Bringing up lab '%s' on '%s'", file, self._host)
         # Using --provision was not reliable
         stdout, stderr = self._run(f"up -f {file}")
-        logger.debug("CML up stdout: '%s'", stdout)
+        logger.info("CML up stdout: '%s'", stdout)
         # Starting lab xxx (ID: 9fde5f)\n
-        current_lab_match = re.match(r".*ID: (?P<id>\S+)\)\n", stdout, re.DOTALL)
+        current_lab_match = re.match(r".*ID: (?P<id>\S+)\)", stdout, re.DOTALL)
         if not current_lab_match:
             raise PytestNetworkError(f"Could not get lab ID: {stdout} {stderr}")
         self.current_lab_id = current_lab_match.groupdict()["id"]

@@ -334,7 +334,7 @@ class VirshWrapper:
                 if current_lab_id in stdout:
                     logger.debug("Found lab %s in virsh dumpxml: %s", current_lab_id, stdout)
                     xmltodict_data = xmltodict.parse(stdout)
-                    return xmltodict_data # type: ignore
+                    return xmltodict_data  # type: ignore
 
             attempt += 1
             time.sleep(5)

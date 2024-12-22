@@ -428,14 +428,14 @@ def _filter_role(role: Path) -> str:
     :param role: The role path.
     :return: The reason for skipping the role, or an empty string if not skipped.
     """
-    if OPTIONS.role_includes: # type: ignore
-        includes = [name.strip() for name in OPTIONS.role_includes.split(",")] # type: ignore
+    if OPTIONS.role_includes:  # type: ignore
+        includes = [name.strip() for name in OPTIONS.role_includes.split(",")]  # type: ignore
         if not any(include in role.name for include in includes):
             logger.debug("Role %s not included by filter", role.name)
             return "Role not included by filter"
 
-    if OPTIONS.role_excludes: # type: ignore
-        excludes = [name.strip() for name in OPTIONS.role_excludes.split(",")] # type: ignore
+    if OPTIONS.role_excludes:  # type: ignore
+        excludes = [name.strip() for name in OPTIONS.role_excludes.split(",")]  # type: ignore
         if any(exclude in role.name for exclude in excludes):
             logger.debug("Role %s excluded by filter", role.name)
             return "Role excluded by filter"

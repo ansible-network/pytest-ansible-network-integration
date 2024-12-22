@@ -235,7 +235,6 @@ def ansible_project(
     """
     logger.info("Building the Ansible project")
     ports = calculate_ports(appliance_dhcp_address)
-    logger.debug(f"Calculated ports: {ports}")
 
     inventory = _inventory(
         network_os=env_vars["network_os"],

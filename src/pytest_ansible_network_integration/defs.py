@@ -387,7 +387,7 @@ class VirshWrapper:
             except (IndexError, ValueError) as e:
                 error_message = f"Failed to parse DHCP leases: {e}"
                 logger.error(error_message)
-                raise PytestNetworkError(error_message)
+                raise PytestNetworkError(error_message) from e
 
             try:
                 ips = [leases[mac] for mac in macs if mac in leases]

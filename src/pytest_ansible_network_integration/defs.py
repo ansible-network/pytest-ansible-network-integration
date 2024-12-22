@@ -333,7 +333,8 @@ class VirshWrapper:
                 stdout, _stderr = self.ssh.execute(f"sudo virsh dumpxml {virsh_id}")
                 if current_lab_id in stdout:
                     logger.debug("Found lab %s in virsh dumpxml: %s", current_lab_id, stdout)
-                    return xmltodict.parse(stdout)
+                    xmltodict_data = xmltodict.parse(stdout)
+                    return xmltodict_data # type: ignore
 
             attempt += 1
             time.sleep(5)

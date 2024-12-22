@@ -79,10 +79,6 @@ def playbook(hosts: str, role: str) -> List[Dict[str, object]]:
     playbook_obj = [play]
     return playbook_obj
 
-
-from typing import Tuple
-
-
 def calculate_ports(appliance_dhcp_address: str) -> Dict[str, int]:
     """Calculate ports based on the appliance DHCP address.
 

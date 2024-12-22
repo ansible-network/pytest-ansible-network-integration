@@ -29,7 +29,7 @@ from .utils import playbook
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", # cspell:ignore levelname
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # cspell:ignore levelname
     handlers=[logging.FileHandler("pytest-network.log"), logging.StreamHandler()],
 )
 

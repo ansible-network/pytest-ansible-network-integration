@@ -1,3 +1,4 @@
+# cspell:ignore cmlutils
 """This module contains Common objects for Ansible network integration tests plugin."""
 
 from __future__ import annotations

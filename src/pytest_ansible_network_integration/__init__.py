@@ -227,8 +227,8 @@ def ansible_project(
         host=env_vars["cml_host"],
         username=env_vars["device_username"],
         password=env_vars['device_password'],
-        port=ports[0],  # ssh_port
-        httpapi_port=ports[2],  # http_port
+        port=ports['ssh_port'],  # ssh_port
+        httpapi_port=ports['http_port'],  # http_port
     )
     logger.debug(f"Generated inventory: {inventory}")
 

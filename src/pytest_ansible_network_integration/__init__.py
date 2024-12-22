@@ -1,28 +1,33 @@
-
-import os
-import logging
 import json
+import logging
+import os
 import time
 
 from pathlib import Path
-from typing import Dict, Any, Generator
+from typing import Any
+from typing import Dict
+from typing import Generator
 
 import pytest
 
 from pluggy._result import _Result as pluggy_result
 
-from .utils import _print, _github_action_log, _inventory, playbook, calculate_ports
+from .defs import AnsibleProject
+from .defs import CmlWrapper
+from .defs import VirshWrapper
 from .exceptions import PytestNetworkError
-from .defs import AnsibleProject, CmlWrapper, VirshWrapper
+from .utils import _github_action_log
+from .utils import _inventory
+from .utils import _print
+from .utils import calculate_ports
+from .utils import playbook
+
 
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('pytest-network.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("pytest-network.log"), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
@@ -45,7 +50,9 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
         logger.debug(f"Test path: {requesting_test}")
 
         test_fixture_directory = Path(
-            Path(requesting_test.parts[0]) / "integration/fixtures" / Path(*requesting_test.parts[1:])
+            Path(requesting_test.parts[0])
+            / "integration/fixtures"
+            / Path(*requesting_test.parts[1:])
         ).resolve()
         logger.debug(f"Test fixture directory: {test_fixture_directory}")
 
@@ -65,6 +72,7 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error creating network test vars: {e}")
         raise PytestNetworkError(f"Error creating network test vars: {e}")
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Add options to pytest.
@@ -92,7 +100,9 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="The comma delimited negative search substring to filter the roles",
     )
 
+
 OPTIONS = None
+
 
 def pytest_configure(config: pytest.Config) -> None:
     """Make command-line arguments available globally.
@@ -107,13 +117,14 @@ def pytest_configure(config: pytest.Config) -> None:
     global OPTIONS  # pylint: disable=global-statement
     OPTIONS = config.option
 
+
 @pytest.fixture(scope="session", name="env_vars")
 def required_environment_variables() -> Dict[str, str]:
     """Return the required environment variables for the CML environment.
 
     This fixture retrieves the necessary environment variables for the CML
-    environment and returns them as a dictionary. If any 
-    of the required environment variables are not set, it raises a 
+    environment and returns them as a dictionary. If any
+    of the required environment variables are not set, it raises a
     PytestNetworkError.
 
     :raises PytestNetworkError: If any of the required environment variables are not set.
@@ -131,12 +142,13 @@ def required_environment_variables() -> Dict[str, str]:
     if not all(variables.values()):
         logger.error("CML environment variables not set")
         raise PytestNetworkError("CML environment variables not set")
-    
+
     # Get the device username and password, default to "ansible" if not found.
-    variables['device_username'] = os.environ.get("DEVICE_USERNAME", "ansible")
-    variables['device_password'] = os.environ.get("DEVICE_PASSWORD", "ansible")
+    variables["device_username"] = os.environ.get("DEVICE_USERNAME", "ansible")
+    variables["device_password"] = os.environ.get("DEVICE_PASSWORD", "ansible")
 
     return variables  # type: ignore[return-value]
+
 
 @pytest.fixture
 def environment() -> Dict[str, Any]:
@@ -154,6 +166,7 @@ def environment() -> Dict[str, Any]:
     # Disable warnings about localhost, since these are tests
     env["ANSIBLE_LOCALHOST_WARNING"] = "False"
     return env
+
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(
@@ -177,6 +190,7 @@ def pytest_runtest_makereport(
     # set a report attribute for each phase of a call, which can
     # be "setup", "call", "teardown"
     setattr(item, "rep_" + rep.when, rep)
+
 
 @pytest.fixture(autouse=True)
 def github_log(request: pytest.FixtureRequest) -> Generator[None, None, None]:
@@ -203,6 +217,7 @@ def github_log(request: pytest.FixtureRequest) -> Generator[None, None, None]:
 
         _github_action_log("::endgroup::")
 
+
 @pytest.fixture
 def ansible_project(
     appliance_dhcp_address: str,
@@ -226,9 +241,9 @@ def ansible_project(
         network_os=env_vars["network_os"],
         host=env_vars["cml_host"],
         username=env_vars["device_username"],
-        password=env_vars['device_password'],
-        port=ports['ssh_port'],  # ssh_port
-        httpapi_port=ports['http_port'],  # http_port
+        password=env_vars["device_password"],
+        port=ports["ssh_port"],  # ssh_port
+        httpapi_port=ports["http_port"],  # http_port
     )
     logger.debug(f"Generated inventory: {inventory}")
 
@@ -261,6 +276,7 @@ def ansible_project(
     logger.info("Ansible project created successfully")
     return ansible_project
 
+
 @pytest.fixture
 def localhost_project(
     integration_test_path: Path,
@@ -273,7 +289,7 @@ def localhost_project(
     :returns: The ansible project
     """
     logger.debug("Building the Ansible project for localhost")
-    
+
     playbook_contents = playbook(hosts="localhost", role=str(integration_test_path))
     playbook_path = tmp_path / "site.json"
     with playbook_path.open(mode="w", encoding="utf-8") as fh:
@@ -296,6 +312,7 @@ def localhost_project(
     logger.info("Ansible project for localhost created successfully")
     return ansible_project
 
+
 @pytest.fixture(scope="session", name="appliance_dhcp_address")
 def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, None]:
     """Build the lab and collect the appliance DHCP address.
@@ -314,7 +331,7 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
     try:
         if not OPTIONS:
             raise PytestNetworkError("Missing CML lab options")
-        
+
         lab_file = OPTIONS.cml_lab
         if not os.path.exists(lab_file):
             raise PytestNetworkError(f"Missing lab file '{lab_file}'")
@@ -367,6 +384,7 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
         raise
     finally:
         _github_action_log("::endgroup::")
+
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     """Generate tests based on the integration test paths.

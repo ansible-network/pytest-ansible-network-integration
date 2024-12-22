@@ -10,7 +10,11 @@ import time
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any, List
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 import xmltodict
 
@@ -21,9 +25,11 @@ from pylibsshext.session import Session
 
 from .exceptions import PytestNetworkError
 
+
 # pylint: enable=no-name-in-module
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class AnsibleProject:
@@ -36,6 +42,7 @@ class AnsibleProject:
     playbook: Path
     role: str
     inventory: Optional[Path] = None
+
 
 class SshWrapper:
     """Wrapper for pylibssh to manage SSH connections and execute commands in remote devices."""
@@ -109,6 +116,7 @@ class SshWrapper:
         """
         logger.debug("Closing SSH channel")
         self.ssh_channel.close()
+
 
 class CmlWrapper:
     """Wrapper for interacting with CML (Cisco Modeling Labs).
@@ -197,7 +205,7 @@ class CmlWrapper:
         logger.debug("CML use command stdout: '%s'", stdout)
         if _stderr:
             logger.error("CML use command stderr: '%s'", _stderr)
-        
+
         stdout, _stderr = self._run("rm --force --no-confirm")
         logger.debug("CML rm command stdout: '%s'", stdout)
         if _stderr:
@@ -250,6 +258,7 @@ class CmlWrapper:
 
         with open(env_file, "w", encoding="utf-8") as fh:
             fh.writelines(data)
+
 
 class VirshWrapper:
     """Wrapper for interacting with virsh via SSH."""

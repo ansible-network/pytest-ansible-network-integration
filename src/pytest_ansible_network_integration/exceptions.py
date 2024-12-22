@@ -1,5 +1,6 @@
 """This module contains custom exceptions for the pytest plugin."""
 
+
 class PytestNetworkError(Exception):
     """Class representing exceptions raised from the pytest plugin code."""
 

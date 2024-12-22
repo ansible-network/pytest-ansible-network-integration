@@ -2,7 +2,10 @@
 
 import os
 
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
+
 
 def _print(message: str) -> None:
     """Print a message and flush.
@@ -13,6 +16,7 @@ def _print(message: str) -> None:
     """
     print(f"{message}", flush=True)
 
+
 def _github_action_log(message: str) -> None:
     """Log a message to GitHub Actions.
 
@@ -20,6 +24,7 @@ def _github_action_log(message: str) -> None:
     """
     if os.environ.get("GITHUB_ACTIONS"):
         _print(message)
+
 
 def _inventory(
     host: str,
@@ -61,6 +66,7 @@ def _inventory(
     }
     return inventory
 
+
 def playbook(hosts: str, role: str) -> List[Dict[str, object]]:
     """Return the playbook.
 
@@ -73,7 +79,9 @@ def playbook(hosts: str, role: str) -> List[Dict[str, object]]:
     playbook_obj = [play]
     return playbook_obj
 
+
 from typing import Tuple
+
 
 def calculate_ports(appliance_dhcp_address: str) -> Dict[str, int]:
     """Calculate ports based on the appliance DHCP address.

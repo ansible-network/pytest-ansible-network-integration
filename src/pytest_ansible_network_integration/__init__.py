@@ -61,7 +61,7 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
         logger.debug("Test fixture directory: %s", test_fixture_directory)
 
         test_mode = os.environ.get("ANSIBLE_NETWORK_TEST_MODE", "playback").lower()
-        logger.debug(f"Test mode: {test_mode}")
+        logger.debug("Test mode: %s", test_mode)
 
         play_vars = {
             "ansible_network_test_parameters": {
@@ -302,7 +302,7 @@ def localhost_project(
 
     _print(f"Playbook path: {playbook_path}")
 
-    ansible_project = AnsibleProject(
+    project = AnsibleProject(
         collection_doc_cache=tmp_path / "collection_doc_cache.db",
         directory=tmp_path,
         log_file=Path.home() / "test_logs" / f"{integration_test_path.name}.log",
@@ -314,7 +314,7 @@ def localhost_project(
         role=integration_test_path.name,
     )
     logger.info("Ansible project for localhost created successfully")
-    return ansible_project
+    return project
 
 
 @pytest.fixture(scope="session", name="appliance_dhcp_address")
@@ -366,8 +366,9 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
             raise PytestNetworkError("Failed to get DHCP lease for the appliance") from exc
 
         end = time.time()
-        _print(f"Elapsed time to provision: {end - start} seconds")
-        logger.info(f"Elapsed time to provision: {end - start} seconds")
+        elapsed = end - start
+        _print(f"Elapsed time to provision: {elapsed} seconds")
+        logger.info("Elapsed time to provision: %s seconds", elapsed)
 
     except PytestNetworkError as exc:
         logger.error("Failed to provision lab: %s", exc)

@@ -163,7 +163,7 @@ class CmlWrapper:
                 self._lab_existed = True
                 return
         if _stderr:
-            logger.error(f"CML id stderr: {_stderr}")
+            logger.error("CML id stderr: %s", _stderr)
 
         logger.info("No lab currently provisioned")
         logger.info("Bringing up lab '%s' on '%s'", file, self._host)
@@ -175,7 +175,7 @@ class CmlWrapper:
         current_lab_match = re.match(r".*ID: (?P<id>\S+)\)\n", stdout, re.DOTALL)
         if not current_lab_match:
             logger.error("Failed to bring up the or match the lab ID")
-            logger.error(f"CML up stderr: {stderr}")
+            logger.error("CML up stderr: %s", stderr)
             raise PytestNetworkError(f"Could not get lab ID: {stdout} {stderr}")
 
         try:
@@ -183,7 +183,7 @@ class CmlWrapper:
         except KeyError as e:
             error_message = f"Failed to extract lab ID: {e}"
             logger.error(error_message)
-            raise PytestNetworkError(error_message)
+            raise PytestNetworkError(error_message) from e
 
         logger.info("Started lab id '%s'", self.current_lab_id)
 
@@ -298,17 +298,17 @@ class VirshWrapper:
         logger.info("DHCP lease IP found: %s", ips[0])
         return ips[0]
 
-    def _find_current_lab(self, current_lab_id: str, maxAttempts: int = 20) -> Dict[str, Any]:
+    def _find_current_lab(self, current_lab_id: str, max_attempts: int = 20) -> Dict[str, Any]:
         """Find the current lab by its ID.
 
         :param current_lab_id: The current lab ID.
-        :param maxAttempts: The maximum number of attempts to find the lab.
+        :param max_attempts: The maximum number of attempts to find the lab.
         :raises PytestNetworkError: If the current lab cannot be found.
         :return: A dictionary representing the current lab.
         """
         attempt = 0
 
-        while attempt < maxAttempts:
+        while attempt < max_attempts:
             logger.info("Attempt %s to find the current lab", attempt)
             stdout, _stderr = self.ssh.execute("sudo virsh list --all")
             logger.debug("virsh list output: %s", stdout)
@@ -327,7 +327,7 @@ class VirshWrapper:
             except KeyError as e:
                 error_message = f"Failed to extract virsh IDs: {e}"
                 logger.error(error_message)
-                raise PytestNetworkError(error_message)
+                raise PytestNetworkError(error_message) from e
 
             for virsh_id in virsh_ids:
                 stdout, _stderr = self.ssh.execute(f"sudo virsh dumpxml {virsh_id}")
@@ -358,20 +358,20 @@ class VirshWrapper:
         except KeyError as e:
             error_message = f"Failed to extract MAC addresses: {e}"
             logger.error(error_message)
-            raise PytestNetworkError(error_message)
+            raise PytestNetworkError(error_message) from e
 
-    def _find_dhcp_lease(self, macs: List[str], maxAttempts: int = 100) -> List[str]:
+    def _find_dhcp_lease(self, macs: List[str], max_attempts: int = 100) -> List[str]:
         """Find the DHCP lease for the given MAC addresses.
 
         :param macs: A list of MAC addresses.
-        :param maxAttempts: The maximum number of attempts to find the DHCP lease.
+        :param max_attempts: The maximum number of attempts to find the DHCP lease.
         :raises PytestNetworkError: If the DHCP lease cannot be found.
         :return: A list of IP addresses.
         """
         attempt = 0
         ips: List[str] = []
 
-        while attempt < maxAttempts:
+        while attempt < max_attempts:
             logger.info("Attempt %s to find DHCP lease", attempt)
             stdout, _stderr = self.ssh.execute("sudo virsh net-dhcp-leases default")
             logger.debug("virsh net-dhcp-leases output: %s", stdout)
@@ -394,7 +394,7 @@ class VirshWrapper:
             except KeyError as e:
                 error_message = f"Failed to find IP for MAC address: {e}"
                 logger.error(error_message)
-                raise PytestNetworkError(error_message)
+                raise PytestNetworkError(error_message) from e
 
             if ips:
                 return ips

@@ -51,14 +51,14 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
     """
     try:
         requesting_test = Path(request.node.nodeid)
-        logger.debug(f"Test path: {requesting_test}")
+        logger.debug("Test path: %s", requesting_test)
 
         test_fixture_directory = Path(
             Path(requesting_test.parts[0])
             / "integration/fixtures"
             / Path(*requesting_test.parts[1:])
         ).resolve()
-        logger.debug(f"Test fixture directory: {test_fixture_directory}")
+        logger.debug("Test fixture directory: %s", test_fixture_directory)
 
         test_mode = os.environ.get("ANSIBLE_NETWORK_TEST_MODE", "playback").lower()
         logger.debug(f"Test mode: {test_mode}")
@@ -74,8 +74,8 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
         return play_vars
 
     except Exception as e:
-        logger.error(f"Error creating network test vars: {e}")
-        raise PytestNetworkError(f"Error creating network test vars: {e}")
+        logger.error("Error creating network test vars: %s", e)
+        raise PytestNetworkError("Error creating network test vars: %s", e) from e
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -248,23 +248,23 @@ def ansible_project(
         port=ports["ssh_port"],  # ssh_port
         httpapi_port=ports["http_port"],  # http_port
     )
-    logger.debug(f"Generated inventory: {inventory}")
+    logger.debug("Generated inventory: %s", inventory)
 
     inventory_path = tmp_path / "inventory.json"
     with inventory_path.open(mode="w", encoding="utf-8") as fh:
         json.dump(inventory, fh)
-    logger.debug(f"Inventory written to {inventory_path}")
+    logger.debug("Inventory written to %s", inventory_path)
 
     playbook_contents = playbook(hosts="all", role=str(integration_test_path))
     playbook_path = tmp_path / "site.json"
     with playbook_path.open(mode="w", encoding="utf-8") as fh:
         json.dump(playbook_contents, fh)
-    logger.debug(f"Playbook written to {playbook_path}")
+    logger.debug("Playbook written to %s", playbook_path)
 
-    _print(f"Inventory path: {inventory_path}")
-    _print(f"Playbook path: {playbook_path}")
+    _print("Inventory path: %s", inventory_path)
+    _print("Playbook path: %s", playbook_path)
 
-    ansible_project = AnsibleProject(
+    project = AnsibleProject(
         collection_doc_cache=tmp_path / "collection_doc_cache.db",
         directory=tmp_path,
         inventory=inventory_path,
@@ -277,7 +277,7 @@ def ansible_project(
         role=integration_test_path.name,
     )
     logger.info("Ansible project created successfully")
-    return ansible_project
+    return project
 
 
 @pytest.fixture
@@ -297,9 +297,9 @@ def localhost_project(
     playbook_path = tmp_path / "site.json"
     with playbook_path.open(mode="w", encoding="utf-8") as fh:
         json.dump(playbook_contents, fh)
-    logger.debug(f"Playbook written to {playbook_path}")
+    logger.debug("Playbook written to %s", playbook_path)
 
-    _print(f"Playbook path: {playbook_path}")
+    _print("Playbook path: %s", playbook_path)
 
     ansible_project = AnsibleProject(
         collection_doc_cache=tmp_path / "collection_doc_cache.db",

@@ -1,3 +1,6 @@
+# cspell:ignore nodeid, levelname, cmlutils
+"""Common fixtures for tests."""
+
 import json
 import logging
 import os
@@ -26,7 +29,7 @@ from .utils import playbook
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", # cspell:ignore levelname
     handlers=[logging.FileHandler("pytest-network.log"), logging.StreamHandler()],
 )
 
@@ -43,6 +46,7 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
 
     :param request: The pytest fixture request object, which provides information
                     about the requesting test function
+    :raises PytestNetworkError: If there is an error creating the network test vars.
     :returns: A dictionary containing network test variables.
     """
     try:

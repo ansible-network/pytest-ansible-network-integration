@@ -119,7 +119,8 @@ class SshWrapper:
 
 
 class CmlWrapper:
-    """Wrapper for interacting with CML (Cisco Modeling Labs).
+    """Wrapper for interacting with CML.
+
     This class essentially interacts with the library cmlutils.
     """
 
@@ -238,9 +239,7 @@ class CmlWrapper:
         return stdout.decode(), stderr.decode()
 
     def _update_github_env(self) -> None:
-        """
-        Update the GitHub environment file with the current lab ID.
-        """
+        """Update the GitHub environment file with the current lab ID."""
         logger.info("Updating GitHub environment file with lab ID")
 
         env_file = os.environ.get("GITHUB_ENV", "")
@@ -282,7 +281,6 @@ class VirshWrapper:
         :raises PytestNetworkError: If the DHCP lease cannot be found.
         :return: The IP address associated with the lab.
         """
-
         logger.info("Getting current lab from virsh")
         current_lab = self._find_current_lab(current_lab_id, 20)
 
@@ -303,7 +301,7 @@ class VirshWrapper:
         """Find the current lab by its ID.
 
         :param current_lab_id: The current lab ID.
-        :param attempt: The current attempt number.
+        :param maxAttempts: The maximum number of attempts to find the lab.
         :raises PytestNetworkError: If the current lab cannot be found.
         :return: A dictionary representing the current lab.
         """
@@ -346,6 +344,7 @@ class VirshWrapper:
         """Extract MAC addresses from the current lab.
 
         :param current_lab: A dictionary representing the current lab.
+        :raises PytestNetworkError: If the MAC addresses cannot be extracted.
         :return: A list of MAC addresses.
         """
         try:
@@ -363,6 +362,7 @@ class VirshWrapper:
         """Find the DHCP lease for the given MAC addresses.
 
         :param macs: A list of MAC addresses.
+        :param maxAttempts: The maximum number of attempts to find the DHCP lease.
         :raises PytestNetworkError: If the DHCP lease cannot be found.
         :return: A list of IP addresses.
         """

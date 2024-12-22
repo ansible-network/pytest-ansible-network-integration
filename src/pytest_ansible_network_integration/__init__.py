@@ -74,8 +74,9 @@ def network_test_vars(request: pytest.FixtureRequest) -> Dict[str, Any]:
         return play_vars
 
     except Exception as e:
-        logger.error("Error creating network test vars: %s", e)
-        raise PytestNetworkError("Error creating network test vars: %s", e) from e
+        error_message = f"Error creating network test vars: {e}"
+        logger.error(error_message)
+        raise PytestNetworkError(error_message) from e
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -261,8 +262,8 @@ def ansible_project(
         json.dump(playbook_contents, fh)
     logger.debug("Playbook written to %s", playbook_path)
 
-    _print("Inventory path: %s", inventory_path)
-    _print("Playbook path: %s", playbook_path)
+    _print(f"Inventory path: {inventory_path}")
+    _print(f"Playbook path: {playbook_path}")
 
     project = AnsibleProject(
         collection_doc_cache=tmp_path / "collection_doc_cache.db",
@@ -299,7 +300,7 @@ def localhost_project(
         json.dump(playbook_contents, fh)
     logger.debug("Playbook written to %s", playbook_path)
 
-    _print("Playbook path: %s", playbook_path)
+    _print(f"Playbook path: {playbook_path}")
 
     ansible_project = AnsibleProject(
         collection_doc_cache=tmp_path / "collection_doc_cache.db",

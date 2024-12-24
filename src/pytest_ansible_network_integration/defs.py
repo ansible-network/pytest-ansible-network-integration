@@ -244,6 +244,8 @@ class CmlWrapper:
         logger.info("Updating GitHub environment file with lab ID")
 
         env_file = os.environ.get("GITHUB_ENV", "")
+        logger.info("GitHub environment file: %s", env_file)
+        # Look if below code is running in a GitHub action
         if not env_file:
             return
 

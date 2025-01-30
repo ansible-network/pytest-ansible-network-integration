@@ -284,15 +284,16 @@ class VirshWrapper:
         :raises PytestNetworkError: If the DHCP lease cannot be found.
         :return: The IP address associated with the lab.
         """
-         # Wait for 10 minutes before starting to get the IP
-        logger.info("Waiting for few mins to starting the lab to get the IP...")
-        time.sleep(600)
 
         logger.info("Getting current lab from virsh")
         current_lab = self._find_current_lab(current_lab_id, 20)
 
         macs = self._extract_macs(current_lab)
         logger.info("Found MAC addresses: %s", macs)
+
+        # Wait for 10 minutes before starting to get the IP
+        logger.info("Waiting for few mins to starting the lab to get the IP...")
+        time.sleep(600)
 
         ips = self._find_dhcp_lease(macs, 100)
         logger.debug("Found IPs: %s", ips)

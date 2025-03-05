@@ -281,6 +281,7 @@ class VirshWrapper:
         """Get the DHCP lease for the specified lab.
 
         :param current_lab_id: The current lab ID.
+        :param wait_extra: The number of seconds to wait before finding the DHCP lease.
         :raises PytestNetworkError: If the DHCP lease cannot be found.
         :return: The IP address associated with the lab.
         """
@@ -294,7 +295,7 @@ class VirshWrapper:
         logger.debug("Found IPs: %s", ips)
 
         if wait_extra:
-            logger.info(f"Waiting for extra {wait_extra} seconds")
+            logger.info("Waiting for extra %s seconds", wait_extra)
             time.sleep(wait_extra)
             logger.info("Done waiting, starting to find IPs")
 

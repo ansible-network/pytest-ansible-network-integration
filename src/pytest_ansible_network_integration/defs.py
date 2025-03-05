@@ -277,7 +277,7 @@ class VirshWrapper:
         self.ssh.connect()
         logger.info("Connected to virsh host %s", host)
 
-    def get_dhcp_lease(self, current_lab_id: str) -> str:
+    def get_dhcp_lease(self, current_lab_id: str, wait_extra: int) -> str:
         """Get the DHCP lease for the specified lab.
 
         :param current_lab_id: The current lab ID.
@@ -290,8 +290,13 @@ class VirshWrapper:
         macs = self._extract_macs(current_lab)
         logger.info("Found MAC addresses: %s", macs)
 
-        ips = self._find_dhcp_lease(macs, 100)
+        ips = self._find_dhcp_lease(macs, 200)
         logger.debug("Found IPs: %s", ips)
+
+        if wait_extra:
+            logger.info(f"Waiting for extra {wait_extra} seconds")
+            time.sleep(wait_extra)
+            logger.info("Done waiting, starting to find IPs")
 
         if len(ips) > 1:
             logger.error("Found more than one IP: %s", ips)

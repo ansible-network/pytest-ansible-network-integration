@@ -367,7 +367,7 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
             except ValueError:
                 logger.warning(
                     "Invalid wait_extra value: '%s'. Expected an integer. Skipping extra wait.",
-                    wait_extra_time
+                    wait_extra_time,
                 )
                 wait_seconds = 0
 

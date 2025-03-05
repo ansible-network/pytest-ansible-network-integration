@@ -4,8 +4,8 @@
 import json
 import logging
 import os
-import time
 import sys
+import time
 
 from pathlib import Path
 from typing import Any
@@ -35,7 +35,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # cspell:ignore levelname
     handlers=[logging.FileHandler("pytest-network.log"), logging.StreamHandler(sys.stdout)],
 )
-
 
 
 @pytest.fixture(scope="function")
@@ -106,11 +105,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         help="The comma delimited negative search substring to filter the roles",
     )
-    parser.addoption(
-        "--wait-extra",
-        action="store",
-        help="Add extra wait time in seconds."
-    )
+    parser.addoption("--wait-extra", action="store", help="Add extra wait time in seconds.")
 
 
 OPTIONS = None

@@ -361,6 +361,7 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
 
         # Handle the wait_extra_time
         wait_extra_time = OPTIONS.wait_extra
+        wait_seconds = 0
         if wait_extra_time:
             try:
                 wait_seconds = int(wait_extra_time)

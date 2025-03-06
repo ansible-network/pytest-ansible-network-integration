@@ -4,6 +4,7 @@
 import json
 import logging
 import os
+import sys
 import time
 
 from pathlib import Path
@@ -26,14 +27,14 @@ from .utils import calculate_ports
 from .utils import playbook
 
 
+logger = logging.getLogger(__name__)
+
 # Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # cspell:ignore levelname
-    handlers=[logging.FileHandler("pytest-network.log"), logging.StreamHandler()],
+    handlers=[logging.FileHandler("pytest-network.log"), logging.StreamHandler(sys.stdout)],
 )
-
-logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="function")
@@ -104,6 +105,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         help="The comma delimited negative search substring to filter the roles",
     )
+    parser.addoption("--wait-extra", action="store", help="Add extra wait time in seconds.")
 
 
 OPTIONS = None
@@ -357,8 +359,20 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
             port=int(env_vars["cml_ssh_port"]),
         )
 
+        # Handle the wait_extra_time
+        wait_extra_time = OPTIONS.wait_extra
+        if wait_extra_time:
+            try:
+                wait_seconds = int(wait_extra_time)
+            except ValueError:
+                logger.warning(
+                    "Invalid wait_extra value: '%s'. Expected an integer. Skipping extra wait.",
+                    wait_extra_time,
+                )
+                wait_seconds = 0
+
         try:
-            ip_address = virsh.get_dhcp_lease(lab_id)
+            ip_address = virsh.get_dhcp_lease(lab_id, wait_seconds)
         except PytestNetworkError as exc:
             logger.error("Failed to get DHCP lease for the appliance")
             virsh.close()

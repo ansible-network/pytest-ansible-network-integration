@@ -12,7 +12,7 @@ repos:
         stages: ["manual"]
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         name: Sort import statements using isort
@@ -45,13 +45,13 @@ repos:
           - prettier-plugin-toml
 
   - repo: https://github.com/psf/black.git
-    rev: 24.3.0
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.6.1
+    rev: v8.17.3
     hooks:
       - id: cspell
         name: Spell check with cspell
@@ -62,7 +62,7 @@ repos:
       - id: remove-tabs
 
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       # Side-effects:
       - id: trailing-whitespace
@@ -82,7 +82,7 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.4.1
     hooks:
       - id: codespell
 
@@ -95,7 +95,7 @@ repos:
         types: [file, yaml]
 
   - repo: https://github.com/PyCQA/flake8.git
-    rev: 5.0.4
+    rev: 7.1.2
     hooks:
       - id: flake8
         alias: flake8
@@ -107,7 +107,7 @@ repos:
           - flake8-docstrings # uses pydocstyle
 
   - repo: https://github.com/pre-commit/mirrors-mypy.git
-    rev: v1.9.0
+    rev: v1.15.0
     hooks:
       - id: mypy
         alias: mypy-py311
@@ -121,7 +121,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/pycqa/pylint.git
-    rev: v3.1.0
+    rev: v3.3.5
     hooks:
       - id: pylint
         args:

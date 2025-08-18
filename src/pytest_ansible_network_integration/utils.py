@@ -5,6 +5,7 @@ import os
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Mapping
 
 
 def _print(message: str) -> None:
@@ -65,6 +66,47 @@ def _inventory(
         }
     }
     return inventory
+
+
+def _inventory_multi(
+    host: str,
+    device_to_ip: Mapping[str, str],
+    network_os: str,
+    username: str,
+    password: str,
+) -> Dict[str, Any]:
+    """Build an ansible inventory for multiple devices.
+
+    :param device_to_ip: Mapping of device name to its management IP
+    :param network_os: The network OS
+    :param username: Device username
+    :param password: Device password
+    :returns: The inventory for all devices under group 'all'
+    """
+    hosts: Dict[str, Any] = {}
+
+    for device_name, ip_address in device_to_ip.items():
+        ports = calculate_ports(ip_address)
+        host_key = _sanitize_host_key(device_name)
+        hosts[host_key] = {
+            "ansible_become": False,
+            "ansible_host": host,
+            "ansible_user": username,
+            "ansible_password": password,
+            "ansible_port": ports["ssh_port"],
+            "ansible_httpapi_port": ports["http_port"],
+            "ansible_connection": "ansible.netcommon.network_cli",
+            "ansible_network_cli_ssh_type": "libssh",
+            "ansible_python_interpreter": "python",
+            "ansible_network_import_modules": True,
+        }
+
+    return {"all": {"hosts": hosts, "vars": {"ansible_network_os": network_os}}}
+
+
+def _sanitize_host_key(name: str) -> str:
+    """Return a safe inventory host key from an arbitrary device name."""
+    return "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in name)
 
 
 def playbook(hosts: str, role: str) -> List[Dict[str, object]]:

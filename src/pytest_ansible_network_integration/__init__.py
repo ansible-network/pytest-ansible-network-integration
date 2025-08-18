@@ -22,6 +22,7 @@ from .defs import VirshWrapper
 from .exceptions import PytestNetworkError
 from .utils import _github_action_log
 from .utils import _inventory
+from .utils import _inventory_multi
 from .utils import _print
 from .utils import calculate_ports
 from .utils import playbook
@@ -404,6 +405,138 @@ def _appliance_dhcp_address(env_vars: Dict[str, str]) -> Generator[str, None, No
         raise
     finally:
         _github_action_log("::endgroup::")
+
+
+@pytest.fixture(scope="session", name="appliance_dhcp_map")
+def _appliance_dhcp_map(env_vars: Dict[str, str]) -> Generator[Dict[str, str], None, None]:
+    """Provision the lab and collect DHCP addresses for all appliances.
+
+    Returns a mapping of device name to DHCP IP for all devices in the lab.
+    """
+    _github_action_log("::group::Starting lab provisioning (multi-device)")
+    _print("Starting lab provisioning (multi-device)")
+
+    try:
+        if not OPTIONS:
+            raise PytestNetworkError("Missing CML lab options")
+
+        lab_file = OPTIONS.cml_lab
+        if not os.path.exists(lab_file):
+            raise PytestNetworkError(f"Missing lab file '{lab_file}'")
+
+        start = time.time()
+        cml = CmlWrapper(
+            host=env_vars["cml_host"],
+            username=env_vars["cml_ui_user"],
+            password=env_vars["cml_ui_password"],
+        )
+        cml.bring_up(file=lab_file)
+        lab_id = cml.current_lab_id
+        logger.debug("Lab ID: %s", lab_id)
+
+        virsh = VirshWrapper(
+            host=env_vars["cml_host"],
+            user=env_vars["cml_ssh_user"],
+            password=env_vars["cml_ssh_password"],
+            port=int(env_vars["cml_ssh_port"]),
+        )
+
+        wait_extra_time = OPTIONS.wait_extra
+        wait_seconds = 0
+        if wait_extra_time:
+            try:
+                wait_seconds = int(wait_extra_time)
+            except ValueError:
+                logger.warning(
+                    "Invalid wait_extra value: '%s'. Expected an integer. Skipping extra wait.",
+                    wait_extra_time,
+                )
+                wait_seconds = 0
+
+        try:
+            device_to_ip = virsh.get_dhcp_leases(lab_id, wait_seconds)
+        except PytestNetworkError as exc:
+            logger.error("Failed to get DHCP leases for the appliances")
+            virsh.close()
+            cml.remove()
+            raise PytestNetworkError("Failed to get DHCP leases for the appliances") from exc
+
+        end = time.time()
+        elapsed = end - start
+        _print(f"Elapsed time to provision (multi): {elapsed} seconds")
+        logger.info("Elapsed time to provision (multi): %s seconds", elapsed)
+
+    except PytestNetworkError as exc:
+        logger.error("Failed to provision lab (multi): %s", exc)
+        _github_action_log("::endgroup::")
+        raise
+
+    finally:
+        virsh.close()
+        _github_action_log("::endgroup::")
+
+    yield device_to_ip
+
+    _github_action_log("::group::Removing lab (multi)")
+    try:
+        cml.remove()
+    except PytestNetworkError as exc:
+        logger.error("Failed to remove lab (multi): %s", exc)
+        raise
+    finally:
+        _github_action_log("::endgroup::")
+
+
+@pytest.fixture
+def ansible_project_multi(
+    appliance_dhcp_map: Dict[str, str],
+    env_vars: Dict[str, str],
+    integration_test_path: Path,
+    tmp_path: Path,
+) -> AnsibleProject:
+    """Build an Ansible project for all discovered appliances.
+
+    Creates a multi-host inventory using all DHCP leases discovered.
+    """
+    logger.info("Building the Ansible project for multiple devices")
+
+    inventory = _inventory_multi(
+        host=env_vars["cml_host"],
+        device_to_ip=appliance_dhcp_map,
+        network_os=env_vars["network_os"],
+        username=env_vars["device_username"],
+        password=env_vars["device_password"],
+    )
+    logger.debug("Generated multi-host inventory: %s", inventory)
+
+    inventory_path = tmp_path / "inventory.json"
+    with inventory_path.open(mode="w", encoding="utf-8") as fh:
+        json.dump(inventory, fh)
+    logger.debug("Inventory written to %s", inventory_path)
+
+    playbook_contents = playbook(hosts="all", role=str(integration_test_path))
+    playbook_path = tmp_path / "site.json"
+    with playbook_path.open(mode="w", encoding="utf-8") as fh:
+        json.dump(playbook_contents, fh)
+    logger.debug("Playbook written to %s", playbook_path)
+
+    _print(f"Inventory path: {inventory_path}")
+    _print(f"Playbook path: {playbook_path}")
+
+    project = AnsibleProject(
+        collection_doc_cache=tmp_path / "collection_doc_cache.db",
+        directory=tmp_path,
+        inventory=inventory_path,
+        log_file=Path.home() / "test_logs" / f"{integration_test_path.name}.log",
+        playbook=playbook_path,
+        playbook_artifact=Path.home()
+        / "test_logs"
+        / "{playbook_status}"
+        / f"{integration_test_path.name}.json",
+        role=integration_test_path.name,
+    )
+    logger.info("Ansible multi-host project created successfully")
+    return project
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:

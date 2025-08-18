@@ -300,11 +300,54 @@ class VirshWrapper:
             logger.info("Done waiting, starting to find IPs")
 
         if len(ips) > 1:
-            logger.error("Found more than one IP: %s", ips)
+            logger.error("SSSSSSSSSSSSSSSSS Found more than one IP: %s", ips)
             raise PytestNetworkError("Found more than one IP")
 
         logger.info("DHCP lease IP found: %s", ips[0])
         return ips[0]
+
+    def get_dhcp_leases(self, current_lab_id: str, wait_extra: int) -> Dict[str, str]:
+        """Get DHCP leases for all devices in the specified lab.
+
+        :param current_lab_id: The current lab ID.
+        :param wait_extra: Extra seconds to wait before resolving leases.
+        :raises PytestNetworkError: If no leases can be found.
+        :return: Mapping of device name to its IP address.
+        """
+        logger.info("Getting all current lab domains from virsh")
+        domains = self._find_current_lab_domains(current_lab_id, 20)
+
+        if wait_extra:
+            logger.info("Waiting for extra %s seconds before resolving leases", wait_extra)
+            time.sleep(wait_extra)
+
+        device_to_ip: Dict[str, str] = {}
+        for domain in domains:
+            try:
+                device_name = domain["domain"]["name"]
+            except KeyError as e:
+                logger.error("Failed to extract device name from domain: %s", e)
+                raise PytestNetworkError(f"Failed to extract device name: {e}") from e
+
+            macs = self._extract_macs(domain)
+            ips = self._find_dhcp_lease(macs, 200)
+
+            if not ips:
+                logger.error("No IP found for device '%s'", device_name)
+                raise PytestNetworkError(f"No IP found for device '{device_name}'")
+
+            if len(ips) > 1:
+                logger.warning(
+                    "Multiple IPs found for device '%s' (MACs: %s), choosing first: %s",
+                    device_name,
+                    macs,
+                    ips,
+                )
+
+            device_to_ip[device_name] = ips[0]
+
+        logger.info("Resolved DHCP leases for devices: %s", device_to_ip)
+        return device_to_ip
 
     def _find_current_lab(self, current_lab_id: str, max_attempts: int = 20) -> Dict[str, Any]:
         """Find the current lab by its ID.
@@ -349,6 +392,60 @@ class VirshWrapper:
 
         logger.error("Could not find current lab after %s attempts", attempt)
         raise PytestNetworkError("Could not find current lab")
+
+    def _find_current_lab_domains(
+        self, current_lab_id: str, max_attempts: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Find all domains for the current lab by its ID.
+
+        Iterates over all virsh domains and collects those whose XML includes the
+        given lab ID. Retries up to max_attempts times.
+
+        :param current_lab_id: The current lab ID.
+        :param max_attempts: Maximum attempts to discover lab domains.
+        :raises PytestNetworkError: If no domains are found for the lab.
+        :return: A list of domain XML dicts.
+        """
+        attempt = 0
+        while attempt < max_attempts:
+            logger.info("Attempt %s to find all current lab domains", attempt)
+            stdout, _stderr = self.ssh.execute("sudo virsh list --all")
+            logger.debug("virsh list output: %s", stdout)
+            if _stderr:
+                logger.error("virsh list stderr: %s", _stderr)
+
+            virsh_matches = [re.match(r"^\s(?P<id>\d+)", line) for line in stdout.splitlines()]
+            if not any(virsh_matches):
+                logger.error("No matching virsh IDs found in the output")
+                raise PytestNetworkError("No matching virsh IDs found")
+
+            try:
+                virsh_ids = [
+                    virsh_match.groupdict()["id"] for virsh_match in virsh_matches if virsh_match
+                ]
+            except KeyError as e:
+                error_message = f"Failed to extract virsh IDs: {e}"
+                logger.error(error_message)
+                raise PytestNetworkError(error_message) from e
+
+            matched_domains: List[Dict[str, Any]] = []
+            for virsh_id in virsh_ids:
+                stdout, _stderr = self.ssh.execute(f"sudo virsh dumpxml {virsh_id}")
+                if current_lab_id in stdout:
+                    logger.debug(
+                        "Found lab %s in virsh dumpxml for ID %s", current_lab_id, virsh_id
+                    )
+                    xmltodict_data = xmltodict.parse(stdout)
+                    matched_domains.append(xmltodict_data)  # type: ignore
+
+            if matched_domains:
+                return matched_domains
+
+            attempt += 1
+            time.sleep(5)
+
+        logger.error("Could not find any domains for current lab after %s attempts", attempt)
+        raise PytestNetworkError("Could not find any domains for current lab")
 
     def _extract_macs(self, current_lab: Dict[str, Any]) -> List[str]:
         """Extract MAC addresses from the current lab.
@@ -408,7 +505,7 @@ class VirshWrapper:
                 return ips
 
             attempt += 1
-            time.sleep(10)
+            time.sleep(400)
 
         logger.error("Could not find IPs after %s attempts", attempt)
         raise PytestNetworkError("Could not find IPs")

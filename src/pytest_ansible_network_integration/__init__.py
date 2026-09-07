@@ -26,7 +26,6 @@ from .utils import _print
 from .utils import calculate_ports
 from .utils import playbook
 
-
 logger = logging.getLogger(__name__)
 
 # Configure logging

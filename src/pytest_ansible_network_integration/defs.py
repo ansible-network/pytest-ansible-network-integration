@@ -26,7 +26,6 @@ from pylibsshext.session import Session
 
 from .exceptions import PytestNetworkError
 
-
 # pylint: enable=no-name-in-module
 
 logger = logging.getLogger(__name__)
